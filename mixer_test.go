@@ -103,8 +103,8 @@ func (tc *TestCaseAdd) assert(name string, got, want error) {
 }
 
 func TestServeMixerAddLogicCases(t *testing.T) {
-	mix := NewServeMixer()
-	exp := NewServeMixer()
+	mix := NewStrictServeMixer()
+	exp := NewStrictServeMixer()
 	tc := TestCaseAdd{T: t, mix: mix, exp: exp}
 
 	parts := []string{"a", "b"}
@@ -220,7 +220,7 @@ func TestServeMixerAddLogicCases(t *testing.T) {
 }
 
 func TestServeMixerAddDirectCases(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 
 	cases := []struct {
 		name     string
@@ -471,8 +471,8 @@ func TestServeMixerAddDirectCases(t *testing.T) {
 }
 
 func TestServeMixerMethod(t *testing.T) {
-	mix := NewServeMixer()
-	exp := NewServeMixer()
+	mix := NewStrictServeMixer()
+	exp := NewStrictServeMixer()
 
 	t.Run("panic if wrong method", func(t *testing.T) {
 		defer func() {
@@ -583,7 +583,7 @@ func must(r *http.Request, err error) *http.Request {
 }
 
 func TestServeMixerHandlerLogicCases(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	mix.root.Children = map[string]*treeNode{
 		"/": {
 			Methods: handlerMap{
@@ -664,7 +664,7 @@ func TestServeMixerHandlerLogicCases(t *testing.T) {
 }
 
 func TestServeMixerGet(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	exp := &treeNode{
 		Children: map[string]*treeNode{
 			"/": {
@@ -682,7 +682,7 @@ func TestServeMixerGet(t *testing.T) {
 }
 
 func TestServeMixerPost(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	exp := &treeNode{
 		Children: map[string]*treeNode{
 			"/": {
@@ -700,7 +700,7 @@ func TestServeMixerPost(t *testing.T) {
 }
 
 func TestServeMixerPut(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	exp := &treeNode{
 		Children: map[string]*treeNode{
 			"/": {
@@ -718,7 +718,7 @@ func TestServeMixerPut(t *testing.T) {
 }
 
 func TestServeMixerPatch(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	exp := &treeNode{
 		Children: map[string]*treeNode{
 			"/": {
@@ -736,7 +736,7 @@ func TestServeMixerPatch(t *testing.T) {
 }
 
 func TestServeMixerDelete(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	exp := &treeNode{
 		Children: map[string]*treeNode{
 			"/": {
@@ -754,27 +754,27 @@ func TestServeMixerDelete(t *testing.T) {
 }
 
 func TestNewServeMixer(t *testing.T) {
-	mix := NewServeMixer()
+	mix := NewStrictServeMixer()
 	root := new(treeNode)
 
 	if !reflect.DeepEqual(mix.root, root) {
-		t.Errorf("NewServeMixer() got = %s, want = %s", mix.root, root)
+		t.Errorf("newServeMixer() got = %s, want = %s", mix.root, root)
 	}
 
 	for _, name := range []string{"", "str"} {
 		conv, ok := mix.converters[name]
 		if !ok {
-			t.Errorf("NewServeMixer() converter %q not exist", name)
+			t.Errorf("newServeMixer() converter %q not exist", name)
 		}
 
 		val, err := conv.fn("abc")
 		if err != nil {
-			t.Errorf("NewServeMixer() converter %q unexpected error %v", name, err)
+			t.Errorf("newServeMixer() converter %q unexpected error %v", name, err)
 		}
 
 		_, ok = val.(string)
 		if !ok {
-			t.Errorf("NewServeMixer() converter %q wrong return type", name)
+			t.Errorf("newServeMixer() converter %q wrong return type", name)
 		}
 	}
 
@@ -782,16 +782,16 @@ func TestNewServeMixer(t *testing.T) {
 
 	conv, ok := mix.converters[name]
 	if !ok {
-		t.Errorf("NewServeMixer() converter %q not exist", name)
+		t.Errorf("newServeMixer() converter %q not exist", name)
 	}
 
 	val, err := conv.fn("123")
 	if err != nil {
-		t.Errorf("NewServeMixer() converter %q unexpected error %v", name, err)
+		t.Errorf("newServeMixer() converter %q unexpected error %v", name, err)
 	}
 
 	_, ok = val.(int)
 	if !ok {
-		t.Errorf("NewServeMixer() converter %q wrong return type", name)
+		t.Errorf("newServeMixer() converter %q wrong return type", name)
 	}
 }
