@@ -252,7 +252,10 @@ func (mix *ServeMixer) handler(r *http.Request) (http.Handler, error) {
 
 		child, ok = node.Children[typeToken]
 		if !ok {
-			return nil, ErrNotFound
+			if mix.strict {
+				return nil, ErrNotFound
+			}
+			break
 		}
 
 		val, err := child.conv.fn(part)
@@ -265,7 +268,14 @@ func (mix *ServeMixer) handler(r *http.Request) (http.Handler, error) {
 		i++
 	}
 
-	if node.Methods == nil || node.Methods[r.Method] == nil {
+	found := node.Methods != nil && node.Methods[r.Method] != nil
+
+	if !mix.strict && !found && node.Children[pathToken] != nil {
+		node = node.Children[pathToken]
+		found = node.Methods[r.Method] != nil
+	}
+
+	if !found {
 		return nil, ErrNotFound
 	}
 
@@ -281,6 +291,7 @@ func (mix *ServeMixer) handler(r *http.Request) (http.Handler, error) {
 // ServeMixer is an HTTP request multiplexer.
 // FIXME: ADD DESCRIPTION LIKE http.ServeMux
 type ServeMixer struct {
+	strict bool
 	root       *treeNode
 	converters converterMap
 }
@@ -291,11 +302,16 @@ type PathParams map[int]interface{}
 // PathParamsCtxKey is a context key for using in context.Value.
 var PathParamsCtxKey = &contextKey{"path-params"}
 
+func GetPathParams(r *http.Request) PathParams {
+	return r.Context().Value(PathParamsCtxKey).(PathParams)
+}
+
 // ServeHTTP implements a Handler's interface.
 func (mix *ServeMixer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h, err := mix.handler(r)
 	if errors.Is(err, ErrNotFound) {
 		http.NotFound(w, r)
+		return
 	}
 
 	h.ServeHTTP(w, r)
@@ -326,11 +342,12 @@ func (mix *ServeMixer) Delete(pattern string, handler http.Handler) {
 	mix.method(pattern, http.MethodDelete, handler)
 }
 
-// NewServeMixer allocates and returns a new ServeMixer.
-func NewServeMixer() *ServeMixer {
+// newServeMixer allocates and returns a new ServeMixer.
+func newServeMixer(strictSlashes bool) *ServeMixer {
 	strConv := converter{fn: strConv}
 
 	return &ServeMixer{
+		strict: strictSlashes,
 		root: new(treeNode),
 		converters: map[string]*converter{
 			"":    &strConv,
@@ -338,4 +355,17 @@ func NewServeMixer() *ServeMixer {
 			"int": {fn: intConv},
 		},
 	}
+}
+
+// NewStrictServeMixer returns ServeMixer that
+// has strict behaviour while  capturing request.
+func NewStrictServeMixer() *ServeMixer {
+	return newServeMixer(true)
+}
+
+// NewDanglingServeMixer returns ServeMixer that
+// has not behaviour while capturing request.
+// There can be a couple side-effects because it is dangling.
+func NewDanglingServeMixer() *ServeMixer {
+	return newServeMixer(false)
 }
