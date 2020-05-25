@@ -104,7 +104,7 @@ func main() {
 		last: 2,
 	}
 
-	mix := mixer.NewStrictServeMixer()
+	mix := mixer.NewServeMixer()
 
 	mix.Get("/catalog/", http.HandlerFunc(catalog.All))
 	mix.Post("/catalog/", http.HandlerFunc(catalog.Create))
