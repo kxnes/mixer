@@ -1,3 +1,4 @@
+// Package mixer contains the HTTP multiplexer based on similar trie data structure.
 package mixer
 
 import (
