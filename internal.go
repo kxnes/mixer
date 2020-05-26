@@ -93,7 +93,9 @@ func splitURL(url string) ([]string, error) {
 	if !strings.HasPrefix(url, pathToken) {
 		return []string{}, ErrPattern
 	}
+
 	parts := strings.Split(url[1:], pathToken)
+
 	if parts[len(parts)-1] == "" {
 		parts[len(parts)-1] = pathToken
 	}
