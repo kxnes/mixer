@@ -25,6 +25,7 @@ type (
 )
 
 var (
+	// PathParamsCtxKey is a context key for using in context.Value.
 	PathParamsCtxKey = &contextKey{"path-params"}
 
 	// ErrMethod is the error if try set handler for wrong method inside ServeMux.
